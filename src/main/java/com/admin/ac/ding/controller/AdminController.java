@@ -1,14 +1,14 @@
 package com.admin.ac.ding.controller;
 
+import com.admin.ac.ding.exception.DingServiceException;
 import com.admin.ac.ding.mapper.CategoryMapper;
 import com.admin.ac.ding.mapper.CommodityMapper;
-import com.admin.ac.ding.model.Category;
-import com.admin.ac.ding.model.Commodity;
-import com.admin.ac.ding.model.CommodityDetailVO;
-import com.admin.ac.ding.model.RestResponse;
+import com.admin.ac.ding.model.*;
 import com.admin.ac.ding.service.CacheService;
 import com.admin.ac.ding.service.DingService;
 import com.admin.ac.ding.utils.Utils;
+import com.dingtalk.api.response.*;
+import com.taobao.api.ApiException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,11 +18,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import tk.mybatis.mapper.entity.Example;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import static com.admin.ac.ding.constants.Constants.RcError;
@@ -46,6 +48,58 @@ public class AdminController extends BaseController {
 
     @Autowired
     CommodityMapper commodityMapper;
+
+    @RequestMapping(value = "/getDeptList", method = {RequestMethod.GET})
+    public RestResponse<List<OapiDepartmentListResponse.Department>> getDeptList(
+            @RequestParam(required = false, defaultValue = "1") String deptId,
+            @RequestParam(required = false, defaultValue = "true") Boolean fetchChild
+    ) throws ApiException, ExecutionException, DingServiceException {
+        return RestResponse.getSuccesseResponse(dingService.getDeptList(deptId, fetchChild));
+    }
+
+    @RequestMapping(value = "/getDeptUserSimpleList", method = {RequestMethod.GET})
+    public RestResponse<List<OapiUserSimplelistResponse.Userlist>> getDeptUserSimpleList(
+            @RequestParam(required = false, defaultValue = "1") Long deptId,
+            @RequestParam(required = false, defaultValue = "0") Long pageStart,
+            @RequestParam(required = false, defaultValue = "100") Long pageSize
+    ) throws ApiException, ExecutionException, DingServiceException {
+        return RestResponse.getSuccesseResponse(dingService.getDeptUserSimpleList(deptId, pageStart, pageSize));
+    }
+
+    @RequestMapping(value = "/getDeptDetail", method = {RequestMethod.GET})
+    public RestResponse<OapiDepartmentGetResponse> getDeptDetail(
+            Long deptId
+    ) throws ApiException, ExecutionException, DingServiceException {
+        return RestResponse.getSuccesseResponse(dingService.getDeptDetail(deptId));
+    }
+
+    @RequestMapping(value = "/getUserDetail", method = {RequestMethod.GET})
+    public RestResponse<OapiUserGetWithDeptResponse> getUserDetail(
+            String userId
+    ) throws ApiException, ExecutionException, DingServiceException {
+        return RestResponse.getSuccesseResponse(cacheService.getUserDetail(userId));
+    }
+
+    @RequestMapping(value = "/getDeptUserList", method = {RequestMethod.GET})
+    public RestResponse<List<String>> getDeptUserList(
+            Long deptId
+    ) throws ApiException, ExecutionException, DingServiceException {
+        return RestResponse.getSuccesseResponse(dingService.getDeptUserList(deptId));
+    }
+
+    @RequestMapping(value = "/getDeptUserListDetail", method = {RequestMethod.GET})
+    public RestResponse<List<OapiUserListResponse.Userlist>> getDeptUserListDetail(
+            Long deptId
+    ) throws ApiException, ExecutionException, DingServiceException {
+        return RestResponse.getSuccesseResponse(dingService.getDeptUserListDetail(deptId));
+    }
+
+    @RequestMapping(value = "/getUserByCode", method = {RequestMethod.GET})
+    public RestResponse<OapiUserGetuserinfoResponse> getUserByCode(
+            String code
+    ) throws ApiException, ExecutionException, DingServiceException {
+        return RestResponse.getSuccesseResponse(dingService.getUserByCode(code));
+    }
 
     @RequestMapping(value = "/addCategory", method = {RequestMethod.POST})
     public RestResponse<Void> addCategory(
@@ -193,39 +247,5 @@ public class AdminController extends BaseController {
         idList.forEach(x -> commodityMapper.delCommodityById(x));
 
         return RestResponse.getSuccesseResponse();
-    }
-
-    @RequestMapping(value = "/getCommodityList", method = {RequestMethod.POST})
-    public RestResponse<List<CommodityDetailVO>> getCommodityList() {
-        // 查所有大类
-        List<Category> categoryList = categoryMapper.select(new Category());
-
-        // 查所有商品
-        List<Commodity> commodityList = commodityMapper.select(new Commodity());
-
-        List<CommodityDetailVO> commodityDetailVOList = categoryList.stream().map(x -> {
-            CommodityDetailVO commodityDetailVO = new CommodityDetailVO();
-            commodityDetailVO.setCategory(x);
-            commodityDetailVO.setCommodityList(
-                    commodityList.stream()
-                            .filter(y -> y.getCategoryId().equalsIgnoreCase(x.getCategoryId()))
-                            .collect(Collectors.toList())
-            );
-            return commodityDetailVO;
-        }).collect(Collectors.toList());
-
-        // 增加热销
-        CommodityDetailVO commodityDetailVO = new CommodityDetailVO();
-        Category category = new Category();
-        category.setCategoryName("热销");
-        commodityDetailVO.setCategory(category);
-        commodityDetailVO.setCommodityList(
-                commodityList.stream().filter(x -> !x.getHotSales().equals(Byte.valueOf("0")))
-                .collect(Collectors.toList())
-        );
-
-        commodityDetailVOList.add(commodityDetailVO);
-
-        return RestResponse.getSuccesseResponse(commodityDetailVOList);
     }
 }
