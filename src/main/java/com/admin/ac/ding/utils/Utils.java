@@ -1,6 +1,7 @@
 package com.admin.ac.ding.utils;
 
 import java.util.Random;
+import java.util.UUID;
 
 /**
  * 加解密工具类
@@ -46,5 +47,9 @@ public class Utils {
             count |= byteArr[i] & 0xff;
         }
         return count;
+    }
+
+    public static String getUUIDString() {
+        return UUID.randomUUID().toString() + "-" + String.valueOf(System.currentTimeMillis());
     }
 }
