@@ -8,10 +8,13 @@ import com.admin.ac.ding.service.CacheService;
 import com.admin.ac.ding.service.DingService;
 import com.admin.ac.ding.utils.Utils;
 import com.dingtalk.api.response.*;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.taobao.api.ApiException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +27,9 @@ import tk.mybatis.mapper.entity.Example;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.admin.ac.ding.constants.Constants.RcError;
@@ -133,6 +138,14 @@ public class AdminController extends BaseController {
         return RestResponse.getSuccesseResponse();
     }
 
+    @RequestMapping(value = "/getCategoryList", method = {RequestMethod.GET})
+    public RestResponse<List<Category>> getCategoryList() {
+        Category category = new Category();
+        return RestResponse.getSuccesseResponse(
+                categoryMapper.select(category)
+        );
+    }
+
     @RequestMapping(value = "/delCategory", method = {RequestMethod.POST})
     @Transactional
     public RestResponse<Void> delCategory(
@@ -186,6 +199,7 @@ public class AdminController extends BaseController {
             Commodity commodity
     ) {
         commodity.setCommodityId(Utils.getUUIDString());
+        commodity.setCommoditySales(0);
         commodityMapper.insert(commodity);
         return RestResponse.getSuccesseResponse();
     }
@@ -247,5 +261,33 @@ public class AdminController extends BaseController {
         idList.forEach(x -> commodityMapper.delCommodityById(x));
 
         return RestResponse.getSuccesseResponse();
+    }
+
+    @RequestMapping(value = "/getCommodityPageList", method = {RequestMethod.GET})
+    public RestResponse<PageInfo<CommodityVO>> getCommodityPageList(
+            @RequestParam(value = "pageNum", required = false, defaultValue = "1") Integer pageNum,
+            @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize
+    ) {
+        // 查所有大类
+        List<Category> categoryList = categoryMapper.select(new Category());
+        Map<String, Category> categoryMap = categoryList.stream()
+                .collect(Collectors.toMap(Category::getCategoryId, Function.identity()));
+
+        // 查指定页商品
+        PageHelper.startPage(pageNum, pageSize);
+        PageHelper.orderBy("gmt_create DESC");
+        List<Commodity> commodityList = commodityMapper.select(new Commodity());
+        PageInfo pageInfo = new PageInfo(
+                commodityList.stream().map(x -> {
+                    CommodityVO commodityVO = new CommodityVO();
+                    BeanUtils.copyProperties(x, commodityVO);
+                    if (categoryMap.containsKey(x.getCategoryId())) {
+                        commodityVO.setCategory(categoryMap.get(x.getCategoryId()));
+                    }
+                    return commodityVO;
+                }).collect(Collectors.toList())
+        );
+
+        return RestResponse.getSuccesseResponse(pageInfo);
     }
 }

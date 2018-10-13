@@ -8,6 +8,7 @@ import com.admin.ac.ding.service.DingService;
 import com.admin.ac.ding.utils.Utils;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -22,6 +23,14 @@ import org.springframework.web.bind.annotation.RestController;
 import tk.mybatis.mapper.entity.Example;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAdjuster;
+import java.time.temporal.TemporalField;
+import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -98,7 +107,7 @@ public class DingController extends BaseController {
                         .collect(Collectors.toList())
         );
 
-        commodityDetailVOList.add(commodityDetailVO);
+        commodityDetailVOList.add(0, commodityDetailVO);
 
         return RestResponse.getSuccesseResponse(commodityDetailVOList);
     }
@@ -182,11 +191,23 @@ public class DingController extends BaseController {
     @RequestMapping(value = "/getOrderList", method = {RequestMethod.GET})
     @Transactional
     public RestResponse<PageInfo<OrderDetailVO>> getOrderList(
-            @RequestParam(value = "userId") String userId,
+            @RequestParam(value = "userId", required = false) String userId,
+            @RequestParam(value = "gmtStart", required = false) String gmtStart,
+            @RequestParam(value = "gmtEnd", required = false) String gmtEnd,
             @RequestParam(value = "pageNum", required = false, defaultValue = "1") Integer pageNum,
             @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize
     ) {
-        // 检查商品是否存在
+        Example example1 = new Example(Order.class);
+        Example.Criteria criteria1 = example1.createCriteria();
+        criteria1.andEqualTo("isDeleted", false);
+        if (StringUtils.isNotBlank(userId)) {
+            criteria1.andEqualTo("userId", userId);
+        }
+
+        if (StringUtils.isNotBlank(gmtStart) && StringUtils.isNotBlank(gmtEnd)) {
+            criteria1.andBetween("gmtCreate", gmtStart, gmtEnd);
+        }
+
         Order orderParam = new Order();
         orderParam.setUserId(userId);
         PageHelper.startPage(pageNum, pageSize);
@@ -287,6 +308,104 @@ public class DingController extends BaseController {
         // 清除购物车
         cartsMapper.delCartsForUser(userId);
 
-        return getOrderList(userId, 1, 10);
+        return getOrderList(userId,null,null,1, 10);
+    }
+
+    @RequestMapping(value = "/userCancelOrder", method = {RequestMethod.POST})
+    @Transactional
+    public RestResponse<Void> userCancelOrder(
+            @RequestParam(value = "userId") String userId,
+            @RequestParam(value = "orderId") String orderId
+    ) {
+        // 查询一下订单
+        Order order = new Order();
+        order.setOrderId(orderId);
+        order.setUserId(userId);
+        Order theOrder = orderMapper.selectOne(order);
+        if (theOrder == null) {
+            return RestResponse.getFailedResponse(RcError, "未查找到用户名下该订单");
+        }
+
+        if (!OrderStatus.SUBMITTED.name().equals(theOrder.getOrderStatus())) {
+            return RestResponse.getFailedResponse(RcError, "仅已提交状态的订单可以取消");
+        }
+
+        LocalDateTime orderGmtCreate
+                = LocalDateTime.ofInstant(theOrder.getGmtCreate().toInstant(), ZoneId.systemDefault());
+
+        LocalDateTime now = LocalDateTime.now();
+        // 昨天0点
+        LocalDateTime lastDayZero = now.minusDays(1)
+                .with(ChronoField.HOUR_OF_DAY, 0)
+                .with(ChronoField.MINUTE_OF_HOUR, 0)
+                .with(ChronoField.SECOND_OF_MINUTE, 0)
+                .with(ChronoField.MILLI_OF_SECOND, 0);
+
+        // 今天0点
+        LocalDateTime lastDayEnd = now
+                .with(ChronoField.HOUR_OF_DAY, 0)
+                .with(ChronoField.MINUTE_OF_HOUR, 0)
+                .with(ChronoField.SECOND_OF_MINUTE, 0)
+                .with(ChronoField.MILLI_OF_SECOND, 0);
+
+        // 今天10点
+        LocalDateTime todayPoint = now
+                .with(ChronoField.HOUR_OF_DAY, 10)
+                .with(ChronoField.MINUTE_OF_HOUR, 0)
+                .with(ChronoField.SECOND_OF_MINUTE, 0)
+                .with(ChronoField.MILLI_OF_SECOND, 0);
+
+        if (
+                (
+                        orderGmtCreate.compareTo(lastDayZero) >= 0
+                                && orderGmtCreate.compareTo(lastDayEnd) < 0
+                                && now.compareTo(todayPoint) < 0
+                                && now.compareTo(lastDayEnd) >= 0
+                        )
+                || (orderGmtCreate.compareTo(lastDayEnd) >= 0)
+                ) {
+            // 今天10点前取消昨天的订单
+            // 今天的订单取消
+            theOrder.setOrderStatus(OrderStatus.USER_CANCEL.name());
+            orderMapper.updateByPrimaryKey(theOrder);
+            return RestResponse.getSuccesseResponse();
+        }
+
+        return RestResponse.getFailedResponse(RcError, "当天10点前仅可取消昨日订单");
+    }
+
+    @RequestMapping(value = "/getOrderCommoditySummary", method = {RequestMethod.GET})
+    @Transactional
+    public RestResponse<List<Map<String, Object>>> getOrderCommoditySummary(
+            @RequestParam(value = "date", required = false) String date
+    ) {
+        DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDateTime now = LocalDateTime.now();
+        if (StringUtils.isNotBlank(date)) {
+            now = LocalDateTime.of(LocalDate.parse(date, df), LocalDateTime.MIN.toLocalTime());
+        }
+
+        // 昨天0点
+        LocalDateTime lastDayZero = now.minusDays(1)
+                .with(ChronoField.HOUR_OF_DAY, 0)
+                .with(ChronoField.MINUTE_OF_HOUR, 0)
+                .with(ChronoField.SECOND_OF_MINUTE, 0)
+                .with(ChronoField.MILLI_OF_SECOND, 0);
+
+        // 昨天最后一秒
+        LocalDateTime lastDayEnd = now.minusDays(1)
+                .with(ChronoField.HOUR_OF_DAY, 23)
+                .with(ChronoField.MINUTE_OF_HOUR, 59)
+                .with(ChronoField.SECOND_OF_MINUTE, 59)
+                .with(ChronoField.MILLI_OF_SECOND, 999);
+
+        df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        return RestResponse.getSuccesseResponse(
+                orderMapper.getOrderCommoditySummary(
+                        df.format(lastDayZero),
+                        df.format(lastDayEnd)
+                )
+        );
     }
 }
