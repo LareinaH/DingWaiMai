@@ -3,7 +3,10 @@ package com.admin.ac.ding.schedule;
 import com.admin.ac.ding.controller.AdminController;
 import com.admin.ac.ding.controller.DingController;
 import com.admin.ac.ding.enums.OrderStatus;
+import com.admin.ac.ding.mapper.CommodityMapper;
+import com.admin.ac.ding.mapper.OrderDetailMapper;
 import com.admin.ac.ding.mapper.OrderMapper;
+import com.admin.ac.ding.model.OrderDetail;
 import com.admin.ac.ding.service.DingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +18,8 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
+import java.util.List;
+import java.util.Map;
 
 @Component
 public class ScheduledTask {
@@ -31,6 +36,12 @@ public class ScheduledTask {
 
     @Autowired
     OrderMapper orderMapper;
+
+    @Autowired
+    CommodityMapper commodityMapper;
+
+    @Autowired
+    OrderDetailMapper orderDetailMapper;
 
     @Value("${ding.app.meetingbook.agentid}")
     Long meetingBookAppAgentId;
@@ -93,5 +104,21 @@ public class ScheduledTask {
                 df.format(lastDayZero),
                 df.format(lastDayEnd)
         );
+
+        // 订单完成时需要叠加商品销量
+        List<Map<String, Object>> orderCommoditySales = orderMapper.getOrderCommoditySales(
+                df.format(lastDayZero),
+                df.format(lastDayEnd)
+        );
+
+        for (Map<String, Object> orderCommoditySale : orderCommoditySales) {
+            String commodityId = (String)orderCommoditySale.get("commodityId");
+            Long total = (Long)orderCommoditySale.get("total");
+            commodityMapper.updateCommoditySales(
+                    commodityId,
+                    total
+            );
+            logger.info("commodity {} add sales for {}", commodityId, total);
+        }
     }
 }

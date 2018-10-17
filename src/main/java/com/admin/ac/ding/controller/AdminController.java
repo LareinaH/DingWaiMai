@@ -119,7 +119,7 @@ public class AdminController extends BaseController {
     }
 
     @RequestMapping(value = "/updateCategory", method = {RequestMethod.POST})
-    public RestResponse<Void> addCategory(
+    public RestResponse<Void> updateCategory(
             Long id,
             String categoryName
     ) {
@@ -234,12 +234,17 @@ public class AdminController extends BaseController {
             return RestResponse.getFailedResponse(RcError, "商品热卖属性为空");
         }
 
+        if (c.getOnSale() == null) {
+            return RestResponse.getFailedResponse(RcError, "上架属性为空");
+        }
+
         commodity.setCommodityName(c.getCommodityName());
         commodity.setCommodityPrice(c.getCommodityPrice());
         commodity.setCommoditySpec(c.getCommoditySpec());
         commodity.setCommodityPics(c.getCommodityPics());
         commodity.setCategoryId(c.getCategoryId());
         commodity.setHotSales(c.getHotSales());
+        commodity.setOnSale(c.getOnSale());
 
         commodityMapper.updateByPrimaryKey(commodity);
 
@@ -265,6 +270,7 @@ public class AdminController extends BaseController {
 
     @RequestMapping(value = "/getCommodityPageList", method = {RequestMethod.GET})
     public RestResponse<PageInfo<CommodityVO>> getCommodityPageList(
+            @RequestParam(value = "categoryId", required = false) String categoryId,
             @RequestParam(value = "pageNum", required = false, defaultValue = "1") Integer pageNum,
             @RequestParam(value = "pageSize", required = false, defaultValue = "10") Integer pageSize
     ) {
@@ -276,7 +282,11 @@ public class AdminController extends BaseController {
         // 查指定页商品
         PageHelper.startPage(pageNum, pageSize);
         PageHelper.orderBy("gmt_create DESC");
-        List<Commodity> commodityList = commodityMapper.select(new Commodity());
+        Commodity param = new Commodity();
+        if (StringUtils.isNotBlank(categoryId)) {
+            param.setCategoryId(categoryId);
+        }
+        List<Commodity> commodityList = commodityMapper.select(param);
         PageInfo pageInfo = new PageInfo(
                 commodityList.stream().map(x -> {
                     CommodityVO commodityVO = new CommodityVO();

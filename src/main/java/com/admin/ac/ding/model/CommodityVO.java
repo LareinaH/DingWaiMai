@@ -1,6 +1,6 @@
 package com.admin.ac.ding.model;
 
-public class CommodityVO {
+public class CommodityVO extends Commodity {
     Category category;
 
     public Category getCategory() {

@@ -34,27 +34,27 @@
         <javaClientGenerator targetPackage="com.admin.ac.ding.mapper" targetProject="src/main/java"
                              type="XMLMAPPER"/>
 
-        <table tableName="carts">
-            <generatedKey column="id" sqlStatement="Mysql" identity="true"/>
-            <ignoreColumn column="id" />
-            <ignoreColumn column="is_deleted" />
-            <ignoreColumn column="gmt_create" />
-            <ignoreColumn column="gmt_modify" />
-        </table>
-        <table tableName="category">
-            <generatedKey column="id" sqlStatement="Mysql" identity="true"/>
-            <ignoreColumn column="id" />
-            <ignoreColumn column="is_deleted" />
-            <ignoreColumn column="gmt_create" />
-            <ignoreColumn column="gmt_modify" />
-        </table>
-        <table tableName="commodity">
-            <generatedKey column="id" sqlStatement="Mysql" identity="true"/>
-            <ignoreColumn column="id" />
-            <ignoreColumn column="is_deleted" />
-            <ignoreColumn column="gmt_create" />
-            <ignoreColumn column="gmt_modify" />
-        </table>
+        <!--<table tableName="carts">-->
+            <!--<generatedKey column="id" sqlStatement="Mysql" identity="true"/>-->
+            <!--<ignoreColumn column="id" />-->
+            <!--<ignoreColumn column="is_deleted" />-->
+            <!--<ignoreColumn column="gmt_create" />-->
+            <!--<ignoreColumn column="gmt_modify" />-->
+        <!--</table>-->
+        <!--<table tableName="category">-->
+            <!--<generatedKey column="id" sqlStatement="Mysql" identity="true"/>-->
+            <!--<ignoreColumn column="id" />-->
+            <!--<ignoreColumn column="is_deleted" />-->
+            <!--<ignoreColumn column="gmt_create" />-->
+            <!--<ignoreColumn column="gmt_modify" />-->
+        <!--</table>-->
+        <!--<table tableName="commodity">-->
+            <!--<generatedKey column="id" sqlStatement="Mysql" identity="true"/>-->
+            <!--<ignoreColumn column="id" />-->
+            <!--<ignoreColumn column="is_deleted" />-->
+            <!--<ignoreColumn column="gmt_create" />-->
+            <!--<ignoreColumn column="gmt_modify" />-->
+        <!--</table>-->
         <table tableName="order">
             <generatedKey column="id" sqlStatement="Mysql" identity="true"/>
             <ignoreColumn column="id" />
@@ -62,12 +62,12 @@
             <ignoreColumn column="gmt_create" />
             <ignoreColumn column="gmt_modify" />
         </table>
-        <table tableName="order_detail">
-            <generatedKey column="id" sqlStatement="Mysql" identity="true"/>
-            <ignoreColumn column="id" />
-            <ignoreColumn column="is_deleted" />
-            <ignoreColumn column="gmt_create" />
-            <ignoreColumn column="gmt_modify" />
-        </table>
+        <!--<table tableName="order_detail">-->
+            <!--<generatedKey column="id" sqlStatement="Mysql" identity="true"/>-->
+            <!--<ignoreColumn column="id" />-->
+            <!--<ignoreColumn column="is_deleted" />-->
+            <!--<ignoreColumn column="gmt_create" />-->
+            <!--<ignoreColumn column="gmt_modify" />-->
+        <!--</table>-->
     </context>
 </generatorConfiguration>

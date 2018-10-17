@@ -46,4 +46,17 @@ public interface OrderMapper extends BaseMapper<Order> {
             @Param("gmtStart") String gmtStart,
             @Param("gmtEnd") String gmtEnd
     );
+
+    @Select("select" +
+            " b.commodity_id as commodityId,sum(b.commodity_amount) as total" +
+            " from dingwaimai.order a, dingwaimai.order_detail b" +
+            " where a.is_deleted = 0  and a.gmt_create >= #{gmtStart}" +
+            " and a.gmt_create <= #{gmtEnd}" +
+            " and a.order_status = 'COMPLETED'" +
+            " and a.order_id = b.order_id and b.is_deleted = 0" +
+            " group by b.commodity_id")
+    List<Map<String, Object>> getOrderCommoditySales(
+            @Param("gmtStart") String gmtStart,
+            @Param("gmtEnd") String gmtEnd
+    );
 }

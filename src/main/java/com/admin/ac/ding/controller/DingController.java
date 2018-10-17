@@ -249,7 +249,8 @@ public class DingController extends BaseController {
     @RequestMapping(value = "/submitOrder", method = {RequestMethod.POST})
     @Transactional
     public RestResponse<PageInfo<OrderDetailVO>> submitOrder(
-            @RequestParam(value = "userId") String userId
+            @RequestParam(value = "userId") String userId,
+            @RequestParam(value = "orderTimeType") String orderTimeType
     ) {
         // 查找用户购物车中的所有商品
         Example example = new Example(Carts.class);
@@ -277,6 +278,7 @@ public class DingController extends BaseController {
         order.setUserId(userId);
         order.setOrderId(Utils.getUUIDString());
         order.setOrderStatus(OrderStatus.SUBMITTED.name());
+        order.setOrderTimeType(orderTimeType);
         order.setOrderPrice(
                 cartsList.stream().map(x -> {
                     if (commodityMap.containsKey(x.getCommodityId())) {
@@ -301,6 +303,7 @@ public class DingController extends BaseController {
             orderDetail.setCommoditySpec(commodity.getCommoditySpec());
             orderDetail.setCommodityAmount(x.getCommodityAmount());
             orderDetail.setCommodityPics(commodity.getCommodityPics());
+            orderDetail.setCommodityName(commodity.getCommodityName());
             return orderDetail;
         }).collect(Collectors.toList());
         orderDetailMapper.insertList(orderDetailList);
