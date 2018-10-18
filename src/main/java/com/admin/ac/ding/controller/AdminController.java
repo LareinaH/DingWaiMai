@@ -105,6 +105,22 @@ public class AdminController extends BaseController {
     ) throws ApiException, ExecutionException, DingServiceException {
         return RestResponse.getSuccesseResponse(dingService.getUserByCode(code));
     }
+    
+    @RequestMapping(value = "/getSignParam", method = {RequestMethod.GET})
+    public RestResponse<Map<String, Object>> getSignParam(
+            String url
+    ) throws DingTalkEncryptException, ExecutionException, ApiException, DingServiceException {
+        String jsApiTicket = dingService.getJsApiTicket().getTicket();
+        String nonceStr = UUID.randomUUID().toString();
+        Long timeStamp = System.currentTimeMillis();
+        String sign = DingTalkJsApiSingnature.getJsApiSingnature(url, nonceStr, timeStamp, jsApiTicket);
+        Map<String, Object> signMap = new TreeMap<>();
+        signMap.put("url", url);
+        signMap.put("nonceStr", nonceStr);
+        signMap.put("timeStamp", timeStamp);
+        signMap.put("signature", sign);
+        return RestResponse.getSuccesseResponse(signMap);
+    }
 
     @RequestMapping(value = "/addCategory", method = {RequestMethod.POST})
     public RestResponse<Void> addCategory(
