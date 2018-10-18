@@ -399,15 +399,15 @@ public class DingController extends BaseController {
             now = LocalDateTime.of(LocalDate.parse(date, df), LocalDateTime.MIN.toLocalTime());
         }
 
-        // 昨天0点
-        LocalDateTime lastDayZero = now.minusDays(1)
+        // 今天0点
+        LocalDateTime lastDayZero = now
                 .with(ChronoField.HOUR_OF_DAY, 0)
                 .with(ChronoField.MINUTE_OF_HOUR, 0)
                 .with(ChronoField.SECOND_OF_MINUTE, 0)
                 .with(ChronoField.MILLI_OF_SECOND, 0);
 
-        // 昨天最后一秒
-        LocalDateTime lastDayEnd = now.minusDays(1)
+        // 今天最后一秒
+        LocalDateTime lastDayEnd = now
                 .with(ChronoField.HOUR_OF_DAY, 23)
                 .with(ChronoField.MINUTE_OF_HOUR, 59)
                 .with(ChronoField.SECOND_OF_MINUTE, 59)
