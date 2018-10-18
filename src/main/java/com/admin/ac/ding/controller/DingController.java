@@ -211,11 +211,9 @@ public class DingController extends BaseController {
             criteria1.andBetween("gmtCreate", gmtStart, gmtEnd);
         }
 
-        Order orderParam = new Order();
-        orderParam.setUserId(userId);
         PageHelper.startPage(pageNum, pageSize);
         PageHelper.orderBy("gmt_create DESC");
-        List<Order> orderList = orderMapper.select(orderParam);
+        List<Order> orderList = orderMapper.selectByExample(example1);
         if (CollectionUtils.isEmpty(orderList)) {
             return RestResponse.getSuccesseResponse(
                     new PageInfo<>()
