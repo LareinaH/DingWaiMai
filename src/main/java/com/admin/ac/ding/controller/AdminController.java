@@ -1,8 +1,10 @@
 package com.admin.ac.ding.controller;
 
+import com.admin.ac.ding.enums.SystemRoleType;
 import com.admin.ac.ding.exception.DingServiceException;
 import com.admin.ac.ding.mapper.CategoryMapper;
 import com.admin.ac.ding.mapper.CommodityMapper;
+import com.admin.ac.ding.mapper.SysRoleMapper;
 import com.admin.ac.ding.model.*;
 import com.admin.ac.ding.service.CacheService;
 import com.admin.ac.ding.service.DingService;
@@ -53,6 +55,9 @@ public class AdminController extends BaseController {
 
     @Autowired
     CommodityMapper commodityMapper;
+
+    @Autowired
+    SysRoleMapper sysRoleMapper;
 
     @RequestMapping(value = "/getDeptList", method = {RequestMethod.GET})
     public RestResponse<List<OapiDepartmentListResponse.Department>> getDeptList(
@@ -315,5 +320,58 @@ public class AdminController extends BaseController {
         );
 
         return RestResponse.getSuccesseResponse(pageInfo);
+    }
+
+    @RequestMapping(value = "/addSystemRole", method = {RequestMethod.POST})
+    public RestResponse<Void> addSystemRole(
+            String userId,
+            String role
+    ) {
+        SystemRoleType systemRoleType = SystemRoleType.valueOf(role);
+        SysRole sysRole = new SysRole();
+        sysRole.setUserId(userId);
+        sysRole.setRole(systemRoleType.name());
+        // check if exist
+        List<SysRole> existSysRoleList = sysRoleMapper.select(sysRole);
+        if (CollectionUtils.isEmpty(existSysRoleList)) {
+            sysRoleMapper.insert(sysRole);
+        } else {
+            logger.warn("user {} role {} exist", userId, systemRoleType.name());
+        }
+
+        return RestResponse.getSuccesseResponse();
+    }
+
+    @RequestMapping(value = "/delSystemRole", method = {RequestMethod.POST})
+    public RestResponse<Void> delSystemRole(
+            String userId,
+            String role
+    ) {
+        sysRoleMapper.delSystemRole(userId, role);
+        return RestResponse.getSuccesseResponse();
+    }
+
+    @RequestMapping(value = "/getSystemRole", method = {RequestMethod.GET})
+    public RestResponse<List<OapiUserGetWithDeptResponse>> getSystemRole(
+            String role
+    ) {
+        SysRole param = new SysRole();
+        param.setRole(role);
+        List<SysRole> sysRoleList = sysRoleMapper.select(param);
+        return RestResponse.getSuccesseResponse(
+                sysRoleList.stream().map(x -> {
+                    try {
+                        return cacheService.getUserDetail(x.getUserId());
+                    } catch (DingServiceException e) {
+                        e.printStackTrace();
+                    } catch (ExecutionException e) {
+                        e.printStackTrace();
+                    } catch (ApiException e) {
+                        e.printStackTrace();
+                    }
+
+                    return null;
+                }).filter(z -> z != null).collect(Collectors.toList())
+        );
     }
 }

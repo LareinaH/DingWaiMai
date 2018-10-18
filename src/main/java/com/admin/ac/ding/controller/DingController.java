@@ -1,6 +1,7 @@
 package com.admin.ac.ding.controller;
 
 import com.admin.ac.ding.enums.OrderStatus;
+import com.admin.ac.ding.exception.DingServiceException;
 import com.admin.ac.ding.mapper.*;
 import com.admin.ac.ding.model.*;
 import com.admin.ac.ding.service.CacheService;
@@ -8,6 +9,7 @@ import com.admin.ac.ding.service.DingService;
 import com.admin.ac.ding.utils.Utils;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.taobao.api.ApiException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +37,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -236,6 +239,16 @@ public class DingController extends BaseController {
                 orderDetailVO.setOrderDetailList(ordersMap.get(x.getOrderId()));
             } else {
                 orderDetailVO.setOrderDetailList(new ArrayList<>());
+            }
+
+            try {
+                orderDetailVO.setUserDetail(cacheService.getUserDetail(x.getUserId()));
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            } catch (ApiException e) {
+                e.printStackTrace();
+            } catch (DingServiceException e) {
+                e.printStackTrace();
             }
 
             return orderDetailVO;

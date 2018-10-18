@@ -11,14 +11,14 @@ import java.util.Map;
 
 public interface OrderMapper extends BaseMapper<Order> {
     @Select("SELECT " +
-            "c.commodity_id," +
-            "c.commodity_name," +
-            "c.commodity_spec," +
+            "b.commodity_id," +
+            "b.commodity_name," +
+            "b.commodity_spec," +
+            "a.order_time_type," +
             "sum( b.commodity_amount ) AS total " +
             "FROM " +
             "dingwaimai.order a," +
-            "dingwaimai.order_detail b," +
-            "dingwaimai.commodity c " +
+            "dingwaimai.order_detail b " +
             "WHERE " +
             "a.gmt_create >= #{gmtStart} " +
             "AND a.gmt_create <= #{gmtEnd} " +
@@ -26,9 +26,8 @@ public interface OrderMapper extends BaseMapper<Order> {
             "AND a.is_deleted = 0 " +
             "AND b.is_deleted = 0 " +
             "AND a.order_id = b.order_id " +
-            "AND b.commodity_id = c.commodity_id " +
             "GROUP BY " +
-            "c.commodity_id")
+            "b.commodity_id")
     List<Map<String, Object>> getOrderCommoditySummary(
             @Param("gmtStart") String gmtStart,
             @Param("gmtEnd") String gmtEnd
