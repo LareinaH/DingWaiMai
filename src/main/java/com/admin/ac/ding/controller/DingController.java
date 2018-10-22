@@ -328,7 +328,7 @@ public class DingController extends BaseController {
         // 清除购物车
         cartsMapper.delCartsForUser(userId);
 
-        return getOrderList(userId,null,null,1, 10);
+        return getOrderList(userId, null, null, null, 1, 10);
     }
 
     @RequestMapping(value = "/userCancelOrder", method = {RequestMethod.POST})
