@@ -22,7 +22,7 @@ public interface OrderMapper extends BaseMapper<Order> {
             "WHERE " +
             "a.gmt_create >= #{gmtStart} " +
             "AND a.gmt_create <= #{gmtEnd} " +
-            "AND a.order_status = 'BILLED' " +
+            "AND a.order_status in ('BILLED', 'COMPLETED') " +
             "AND a.is_deleted = 0 " +
             "AND b.is_deleted = 0 " +
             "AND a.order_id = b.order_id " +
