@@ -216,7 +216,7 @@ public class DingController extends BaseController {
         List<Order> orderList = orderMapper.selectByExample(example1);
         if (CollectionUtils.isEmpty(orderList)) {
             return RestResponse.getSuccesseResponse(
-                    new PageInfo<>()
+                    new PageInfo<>(new ArrayList<>())
             );
         }
 
