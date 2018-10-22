@@ -27,7 +27,7 @@ public interface OrderMapper extends BaseMapper<Order> {
             "AND b.is_deleted = 0 " +
             "AND a.order_id = b.order_id " +
             "GROUP BY " +
-            "b.commodity_id")
+            "b.commodity_id, b.commodity_name, b.commodity_spec, a.order_time_type")
     List<Map<String, Object>> getOrderCommoditySummary(
             @Param("gmtStart") String gmtStart,
             @Param("gmtEnd") String gmtEnd
