@@ -195,6 +195,7 @@ public class DingController extends BaseController {
     @Transactional
     public RestResponse<PageInfo<OrderDetailVO>> getOrderList(
             @RequestParam(value = "userId", required = false) String userId,
+            @RequestParam(value = "orderStatus", required = false) String orderStatus,
             @RequestParam(value = "gmtStart", required = false) String gmtStart,
             @RequestParam(value = "gmtEnd", required = false) String gmtEnd,
             @RequestParam(value = "pageNum", required = false, defaultValue = "1") Integer pageNum,
@@ -205,6 +206,10 @@ public class DingController extends BaseController {
         criteria1.andEqualTo("isDeleted", false);
         if (StringUtils.isNotBlank(userId)) {
             criteria1.andEqualTo("userId", userId);
+        }
+        
+        if (StringUtils.isNotBlank(orderStatus)) {
+            criteria1.andIn("orderStatus", Arrays.asList(orderStatus.split(",", -1)));
         }
 
         if (StringUtils.isNotBlank(gmtStart) && StringUtils.isNotBlank(gmtEnd)) {
