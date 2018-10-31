@@ -58,6 +58,9 @@ public class AdminController extends BaseController {
 
     @Autowired
     SysRoleMapper sysRoleMapper;
+    
+    @Autowired
+    DeptListLocalMapper deptListLocalMapper;
 
     @RequestMapping(value = "/getDeptList", method = {RequestMethod.GET})
     public RestResponse<List<OapiDepartmentListResponse.Department>> getDeptList(
@@ -125,6 +128,11 @@ public class AdminController extends BaseController {
         signMap.put("timeStamp", timeStamp);
         signMap.put("signature", sign);
         return RestResponse.getSuccesseResponse(signMap);
+    }
+    
+    @RequestMapping(value = "/getDeptListLocal", method = {RequestMethod.GET})
+    public RestResponse<List<DeptListLocal>> getDeptListLocal() {
+        return RestResponse.getSuccesseResponse(deptListLocalMapper.select(new DeptListLocal()));
     }
 
     @RequestMapping(value = "/addCategory", method = {RequestMethod.POST})
