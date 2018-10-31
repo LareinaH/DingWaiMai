@@ -2,9 +2,7 @@ package com.admin.ac.ding.controller;
 
 import com.admin.ac.ding.enums.SystemRoleType;
 import com.admin.ac.ding.exception.DingServiceException;
-import com.admin.ac.ding.mapper.CategoryMapper;
-import com.admin.ac.ding.mapper.CommodityMapper;
-import com.admin.ac.ding.mapper.SysRoleMapper;
+import com.admin.ac.ding.mapper.*;
 import com.admin.ac.ding.model.*;
 import com.admin.ac.ding.service.CacheService;
 import com.admin.ac.ding.service.DingService;
