@@ -9,6 +9,7 @@ import com.admin.ac.ding.service.DingService;
 import com.admin.ac.ding.utils.DingTalkEncryptException;
 import com.admin.ac.ding.utils.DingTalkJsApiSingnature;
 import com.admin.ac.ding.utils.Utils;
+import com.alibaba.fastjson.JSONObject;
 import com.dingtalk.api.response.*;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -379,5 +380,25 @@ public class AdminController extends BaseController {
                     return null;
                 }).filter(z -> z != null).collect(Collectors.toList())
         );
+    }
+
+    @RequestMapping(value = "/getUserRole", method = {RequestMethod.GET})
+    public RestResponse<JSONObject> getUserRole(
+            String userId
+    ) {
+        Set<String> userRoles = new TreeSet<>();
+        Example example2 = new Example(SysRole.class);
+        Example.Criteria criteria2 = example2.createCriteria();
+        criteria2.andEqualTo("isDeleted", false);
+        criteria2.andEqualTo("userId", userId);
+        List<SysRole> sysRoleList = sysRoleMapper.selectByExample(example2);
+        userRoles.addAll(
+                sysRoleList.stream().map(x -> x.getRole()).collect(Collectors.toList())
+        );
+
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("sysRole", userRoles);
+
+        return RestResponse.getSuccesseResponse(jsonObject);
     }
 }
