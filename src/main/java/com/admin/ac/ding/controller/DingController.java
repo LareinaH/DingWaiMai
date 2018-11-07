@@ -397,6 +397,7 @@ public class DingController extends BaseController {
     @RequestMapping(value = "/getOrderCommoditySummary", method = {RequestMethod.GET})
     @Transactional
     public RestResponse<List<Map<String, Object>>> getOrderCommoditySummary(
+            @RequestParam(value = "orderStatus") String orderStatus,
             @RequestParam(value = "date", required = false) String date
     ) {
         DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -424,7 +425,8 @@ public class DingController extends BaseController {
         return RestResponse.getSuccesseResponse(
                 orderMapper.getOrderCommoditySummary(
                         df.format(lastDayZero),
-                        df.format(lastDayEnd)
+                        df.format(lastDayEnd),
+                        orderStatus
                 )
         );
     }
